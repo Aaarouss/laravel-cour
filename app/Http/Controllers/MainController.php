@@ -5,10 +5,26 @@ namespace App\Http\Controllers;
 use App\Models\Actu;
 use App\Models\Categorie;
 use App\Models\Plat;
+use App\Models\reservation;
 use Illuminate\Http\Request;
 
 class MainController extends Controller
 {
+    private $heures = [
+        // Crénaux du midi
+        '12:00:00' => '12:00',
+        '12:30:00' => '12:30',
+        '13:00:00' => '13:00',
+        '13:30:00' => '12:30',
+    
+        // Crénaux du soir
+        '20:00:00' => '20:00',
+        '20:30:00' => '20:30',
+        '21:00:00' => '21:00',
+        '21:30:00' => '21:30',
+    
+    ];
+    
     public function home()
     {
         $actus = Actu::all();
@@ -18,6 +34,11 @@ class MainController extends Controller
         ]);
     }
 
+    public function contact()
+    {
+        return view ('contact');
+    }
+    
     public function menu()
     {
         $categories = Categorie::all();
@@ -39,6 +60,51 @@ class MainController extends Controller
 
     public function reservation()
     {
-        return view('reservation');
+
+    return view('reservation' ,[
+        'heures' =>$this->heures,
+    ]);
+}
+
+    public function reservationStore(Request $request)
+{   
+        $heures = implode(',', $this->heures);
+
+    $validated = $request->validate([
+        'nom' => 'required|min:3|max:50',
+        'couverts' => 'required|numeric|gte:1|lte:16',
+        'heure' => "required|in:($heures)",
+        'jour' => 'required|date|date_format:Y-m-d|after_or_equal:today',
+        'telephone' => 'required|min:10|max:10',
+        'commentaires' => 'nullable|min:10|max:1000',
+        ]);
+
+    $reservation = new Reservation();
+    $reservation->nom = $validated['nom'];
+    $reservation->couverts = $validated['couverts'];
+    $reservation->heure = $validated['heure'];
+    $reservation->jour = $validated['jour'];
+    $reservation->telephone = $validated['telephone'];
+    $reservation->commentaires = $validated
+    ['commentaires'];
+    
+    $reservation->save();
+    return view('reservationStore', [
+        'reservation'=>$reservation
+    ]);
+}
+    
+    //admin/reservation
+    public function adminReservationIndex()
+    {
+        // récup la liste des résa
+        //affiche un template
+    }
+
+    //admin/reservation/{id}
+    public function adminReservationShow()
+    {
+        //récup la résa
+        //affiche un template
     }
 }
